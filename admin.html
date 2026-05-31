@@ -21,31 +21,47 @@
         .header h1 { font-size: 22px; margin-bottom: 8px; line-height: 1.3; font-weight: 700; }
         .header p { font-size: 13px; opacity: 0.9; }
         
-        /* Connection Status */
         .db-status { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; margin-top: 10px; background: rgba(0,0,0,0.2); padding: 5px 10px; border-radius: 15px; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #fbbf24; } /* Default yellow/connecting */
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #fbbf24; } 
         
         .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
         .stat-card { background: var(--card-bg); padding: 15px 10px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border-light); }
         .stat-card h3 { font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; font-weight: 600;}
         .stat-card .amount { font-size: 18px; font-weight: 700; }
         
+        .table-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding: 0 5px; }
+        .table-header-flex h3 { font-size: 15px; color: var(--admin-dark); }
+        .btn-add { background: var(--admin-main); color: white; border: none; padding: 8px 15px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3); }
+        .btn-add:active { transform: translateY(1px); }
+
         .table-wrapper { background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border-light); margin-bottom: 20px; overflow-x: auto; }
-        table { width: 100%; min-width: 500px; border-collapse: collapse; text-align: center; }
-        th, td { padding: 12px 8px; border-bottom: 1px solid var(--border-light); font-size: 13px; vertical-align: middle; }
-        th { font-size: 13px; background-color: var(--admin-light); color: var(--admin-dark); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;}
+        table { width: 100%; min-width: 550px; border-collapse: collapse; text-align: center; }
+        th, td { padding: 12px 6px; border-bottom: 1px solid var(--border-light); font-size: 13px; vertical-align: middle; }
+        th { font-size: 12px; background-color: var(--admin-light); color: var(--admin-dark); text-transform: uppercase; font-weight: 600;}
         th:nth-child(1), td:nth-child(1) { text-align: left; padding-left: 15px; font-weight: 600; color: var(--text-main);}
         td:nth-child(6) { font-weight: 700; color: var(--admin-main);}
-        .empty-dash { color: #cbd5e1; }
         
-        .action-btn { border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; width: 110px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;}
-        .action-btn:active { transform: translateY(2px); }
-        .btn-unpaid { background-color: white; color: var(--danger); border: 1.5px solid var(--danger); }
-        .btn-unpaid:hover { background-color: #fef2f2; }
-        .btn-paid { background-color: var(--success); color: white; border: 1.5px solid var(--success); }
-        .btn-paid:hover { background-color: #059669; border-color: #059669;}
+        .action-flex { display: flex; gap: 5px; justify-content: center; }
+        .action-btn { border: none; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer; }
+        .btn-status.btn-unpaid { background: white; color: var(--danger); border: 1px solid var(--danger); }
+        .btn-status.btn-paid { background: var(--success); color: white; border: 1px solid var(--success); }
+        .btn-edit { background: var(--admin-light); color: var(--admin-main); padding: 6px 8px; }
+        .btn-delete { background: #fee2e2; color: var(--danger); padding: 6px 8px; }
         
-        .notification { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 8px; font-size: 12px; opacity: 0; transform: translateY(20px); transition: 0.3s; pointer-events: none; z-index: 1000;}
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 2000; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .modal-overlay.show { opacity: 1; pointer-events: auto; }
+        .modal-content { background: white; padding: 25px; border-radius: 12px; width: 90%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); transform: translateY(-20px); transition: 0.3s;}
+        .modal-overlay.show .modal-content { transform: translateY(0); }
+        .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 15px; color: var(--admin-dark); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: var(--text-muted); }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid var(--border-light); border-radius: 6px; font-size: 14px; font-family: 'Poppins'; }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px;}
+        .modal-actions button { padding: 8px 16px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; }
+        .btn-save { background: var(--admin-main); color: white; }
+        .btn-cancel { background: #f1f5f9; color: var(--text-muted); }
+
+        .notification { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 8px; font-size: 12px; opacity: 0; transform: translateY(20px); transition: 0.3s; z-index: 3000;}
         .notification.show { opacity: 1; transform: translateY(0); }
     </style>
 </head>
@@ -53,8 +69,8 @@
     <div class="container">
         <div class="header">
             <div class="admin-badge">ADMIN</div>
-            <h1>⚙️ Kawalan Pembayaran</h1>
-            <p>Klik butang status untuk mengemas kini rekod peserta.</p>
+            <h1>⚙️ Kawalan Penuh Trip</h1>
+            <p>Tambah peserta, tukar nama, ubah jumlah atau kemas kini status bayaran.</p>
             <div class="db-status">
                 <div class="status-dot" id="connection-dot"></div>
                 <span id="connection-text">Menyambung ke Pangkalan Data...</span>
@@ -67,188 +83,140 @@
             <div class="stat-card"><h3>Baki Belum Bayar</h3><div class="amount" id="total-pending" style="color: var(--danger);">RM0</div></div>
         </div>
 
+        <div class="table-header-flex">
+            <h3>Senarai Peserta</h3>
+            <button class="btn-add" id="btn-add-new">➕ Tambah Peserta</button>
+        </div>
+
         <div class="table-wrapper">
             <table>
                 <thead>
                     <tr>
-                        <th>👤 Nama</th><th>🥾</th><th>🏠</th><th>🚙</th><th>🍔</th><th>💰 Total</th>
-                        <th>⚙️ Tindakan Admin</th>
+                        <th>👤 Nama</th><th>💰 Total</th><th>⚙️ Tindakan</th>
                     </tr>
                 </thead>
                 <tbody id="table-body">
-                    <!-- Loading state -->
-                    <tr><td colspan="7">Memuatkan data...</td></tr>
+                    <tr><td colspan="3">Memuatkan data...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <div class="notification" id="toast">✅ Status berjaya!</div>
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-title" id="modal-title">Kemas Kini Peserta</div>
+            <input type="hidden" id="edit-id">
+            <div class="form-group">
+                <label>Nama Peserta</label>
+                <input type="text" id="edit-nama">
+            </div>
+            <div class="form-group">
+                <label>Jumlah Bayaran (RM)</label>
+                <input type="number" id="edit-jumlah">
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" id="btn-cancel">Batal</button>
+                <button class="btn-save" id="btn-save">Simpan Data</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="toast">✅ Berjaya!</div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- DATA ASAS ---
-        const senaraiNama = ["Boi", "Man", "Eja", "Boyo", "Liu", "Fry", "Kel", "Chiko", "Ipan"];
-        const kumpulanCharter = ["Boi", "Man", "Eja", "Boyo"];
-        const kosPerKepala = { hiking: 58, homestay: 34, mamam: 15, charter: 133 };
+        // TAMPAL CONFIG ANDA DI SINI
+        const firebaseConfig = {
+            apiKey: "AIzaSyAdoSX32HqT2Aakdgyg7VS_Cs7N8ez6_bw",
+            authDomain: "aki-aki-trail.firebaseapp.com",
+            projectId: "aki-aki-trail",
+            storageBucket: "aki-aki-trail.firebasestorage.app",
+            messagingSenderId: "686708947350",
+            appId: "1:686708947350:web:02ef0f8851f8b1908485b7"
+        };
 
-        let peserta = senaraiNama.map(nama => {
-            const isCharter = kumpulanCharter.includes(nama);
-            const bayaranCharter = isCharter ? kosPerKepala.charter : 0;
-            const jumlah = kosPerKepala.hiking + kosPerKepala.homestay + bayaranCharter + kosPerKepala.mamam;
-            return { nama, hiking: kosPerKepala.hiking, homestay: kosPerKepala.homestay, charter: bayaranCharter, mamam: kosPerKepala.mamam, jumlah, telahBayar: false };
-        });
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-        // Global Variables
-        let db;
-        let appId;
+        let peserta = [];
         let isAuthReady = false;
 
-        // --- RENDER UI ---
-        function formatVal(nilai) { return nilai === 0 ? `<span class="empty-dash">-</span>` : nilai; }
-        
         function renderData() {
             const tableBody = document.getElementById('table-body');
             let html = '';
-            let jumlahSasaran = 0, jumlahDikutip = 0;
+            let totalExpected = 0, totalCollected = 0;
 
-            peserta.forEach(orang => {
-                const btnClass = orang.telahBayar ? 'btn-paid' : 'btn-unpaid';
-                const btnText = orang.telahBayar ? '✅ Selesai' : '❌ Belum';
+            peserta.forEach(p => {
+                totalExpected += p.jumlah || 0;
+                if(p.telahBayar) totalCollected += p.jumlah || 0;
                 
-                jumlahSasaran += orang.jumlah;
-                if(orang.telahBayar) jumlahDikutip += orang.jumlah;
-
-                html += `
-                    <tr>
-                        <td>${orang.nama}</td><td>${formatVal(orang.hiking)}</td>
-                        <td>${formatVal(orang.homestay)}</td><td>${formatVal(orang.charter)}</td>
-                        <td>${formatVal(orang.mamam)}</td><td>${orang.jumlah}</td>
-                        <td>
-                            <button class="action-btn ${btnClass}" data-nama="${orang.nama}">${btnText}</button>
-                        </td>
-                    </tr>
-                `;
+                html += `<tr>
+                    <td>${p.nama}</td><td>RM ${p.jumlah || 0}</td>
+                    <td>
+                        <div class="action-flex">
+                            <button class="action-btn btn-status ${p.telahBayar ? 'btn-paid' : 'btn-unpaid'}" data-id="${p.id}">${p.telahBayar ? '✅' : '❌'}</button>
+                            <button class="action-btn btn-edit" data-id="${p.id}" data-nama="${p.nama}" data-jumlah="${p.jumlah}">✏️</button>
+                            <button class="action-btn btn-delete" data-id="${p.id}">🗑️</button>
+                        </div>
+                    </td>
+                </tr>`;
             });
             tableBody.innerHTML = html;
-            document.getElementById('total-expected').textContent = `RM ${jumlahSasaran}`;
-            document.getElementById('total-collected').textContent = `RM ${jumlahDikutip}`;
-            document.getElementById('total-pending').textContent = `RM ${jumlahSasaran - jumlahDikutip}`;
+            document.getElementById('total-expected').textContent = `RM ${totalExpected}`;
+            document.getElementById('total-collected').textContent = `RM ${totalCollected}`;
+            document.getElementById('total-pending').textContent = `RM ${totalExpected - totalCollected}`;
         }
 
-        renderData();
-
-        function showToast(mesej, isError = false) {
-            const toast = document.getElementById('toast');
-            toast.textContent = mesej;
-            toast.style.background = isError ? '#ef4444' : '#10b981';
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
-        }
-
-        function updateConnectionStatus(isConnected, mesej) {
-            const dot = document.getElementById('connection-dot');
-            const text = document.getElementById('connection-text');
-            text.textContent = mesej;
-            if (isConnected) {
-                dot.style.backgroundColor = '#10b981'; // Green
-            } else {
-                dot.style.backgroundColor = '#ef4444'; // Red
-            }
-        }
-
-        // --- LOGIK KLIK BUTANG ---
         document.getElementById('table-body').addEventListener('click', async (e) => {
-            const btn = e.target.closest('.action-btn');
-            if (!btn) return; 
+            const id = e.target.closest('button')?.dataset.id;
+            if(!id) return;
 
-            // ALARM JIKA TIADA SAMBUNGAN:
-            if (!isAuthReady) {
-                showToast("Sistem belum bersambung ke pangkalan data!", true);
-                alert("Harap maklum: Firebase belum disambungkan. Jika anda membuka fail ini di komputer anda secara manual, anda perlu memasukkan kod konfigurasi Firebase di dalam script.");
-                return; 
-            }
-
-            const nama = btn.getAttribute('data-nama');
-            const person = peserta.find(p => p.nama === nama);
-            
-            if (person) {
-                const statusBaru = !person.telahBayar;
-                person.telahBayar = statusBaru; // Optimistic update
-                renderData();
-
-                try {
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'payments', nama);
-                    await setDoc(docRef, {
-                        nama: nama,
-                        telahBayar: statusBaru,
-                        jumlah: person.jumlah,
-                        updatedAt: new Date().toISOString()
-                    }, { merge: true });
-                    showToast(`Status ${nama} dikemas kini.`);
-                } catch (error) {
-                    console.error("Ralat Firebase:", error);
-                    person.telahBayar = !statusBaru; // Revert if fail
-                    renderData();
-                    showToast("Gagal dikemas kini! Tiada kebenaran/sambungan.", true);
-                }
+            if(e.target.classList.contains('btn-status')) {
+                const p = peserta.find(x => x.id === id);
+                await updateDoc(doc(db, 'payments', id), { telahBayar: !p.telahBayar });
+            } else if(e.target.classList.contains('btn-edit')) {
+                document.getElementById('edit-id').value = id;
+                document.getElementById('edit-nama').value = e.target.dataset.nama;
+                document.getElementById('edit-jumlah').value = e.target.dataset.jumlah;
+                document.getElementById('modal-overlay').classList.add('show');
+            } else if(e.target.classList.contains('btn-delete')) {
+                if(confirm("Padam peserta?")) await deleteDoc(doc(db, 'payments', id));
             }
         });
 
-        // --- FIREBASE INITIALIZATION ---
-        try {
-            // Semak adakah fail dijalankan dalam persekitaran yang betul
-            if (typeof __firebase_config === 'undefined') {
-                throw new Error("Missing Firebase Config");
-            }
+        document.getElementById('btn-save').onclick = async () => {
+            const id = document.getElementById('edit-id').value || "user_" + Date.now();
+            await setDoc(doc(db, 'payments', id), {
+                nama: document.getElementById('edit-nama').value,
+                jumlah: parseInt(document.getElementById('edit-jumlah').value),
+                telahBayar: false
+            }, {merge: true});
+            document.getElementById('modal-overlay').classList.remove('show');
+        };
 
-            const firebaseConfig = JSON.parse(__firebase_config);
-            const app = initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            db = getFirestore(app);
-            appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        document.getElementById('btn-add-new').onclick = () => {
+            document.getElementById('edit-id').value = '';
+            document.getElementById('modal-overlay').classList.add('show');
+        };
+        
+        document.getElementById('btn-cancel').onclick = () => document.getElementById('modal-overlay').classList.remove('show');
 
-            const initAuth = async () => {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            };
-            initAuth();
-
-            onAuthStateChanged(auth, (user) => {
-                if (!user) {
-                    updateConnectionStatus(false, "Gagal log masuk sistem.");
-                    return;
-                }
-                
-                isAuthReady = true;
-                updateConnectionStatus(true, "Berhubung secara Live 🟢");
-                
-                const paymentsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'payments');
-                onSnapshot(paymentsColRef, (snapshot) => {
-                    if (!snapshot.empty) {
-                        snapshot.forEach(doc => {
-                            const dbData = doc.data();
-                            const person = peserta.find(p => p.nama === dbData.nama);
-                            if (person) person.telahBayar = dbData.telahBayar;
-                        });
-                        renderData();
-                    }
-                }, (error) => {
-                    updateConnectionStatus(false, "Terputus dari server!");
-                });
+        signInAnonymously(auth);
+        onAuthStateChanged(auth, (user) => {
+            if(!user) return;
+            isAuthReady = true;
+            document.getElementById('connection-text').textContent = "Berhubung secara Live 🟢";
+            document.getElementById('connection-dot').style.backgroundColor = '#10b981';
+            onSnapshot(collection(db, 'payments'), (snap) => {
+                peserta = [];
+                snap.forEach(d => peserta.push({id: d.id, ...d.data()}));
+                renderData();
             });
-
-        } catch (error) {
-            console.error(error);
-            updateConnectionStatus(false, "Sistem Dijalankan Tanpa Firebase (Mode Offline)");
-        }
+        });
     </script>
 </body>
 </html>
-

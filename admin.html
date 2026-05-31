@@ -16,10 +16,14 @@
         body { background-color: var(--bg-color); color: var(--text-main); padding: 15px 10px; }
         .container { max-width: 800px; margin: 0 auto; }
         
-        .header { background: linear-gradient(135deg, var(--admin-main), var(--admin-dark)); border-radius: 12px; padding: 25px 20px; color: white; text-align: center; margin-bottom: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
-        .admin-badge { position: absolute; top: 15px; right: -35px; background: #ef4444; font-size: 11px; font-weight: bold; padding: 5px 40px; transform: rotate(45deg); letter-spacing: 1.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
+        .header { background: linear-gradient(135deg, var(--admin-main), var(--admin-dark)); border-radius: 12px; padding: 25px 20px; color: white; text-align: center; margin-bottom: 20px; position: relative; overflow: hidden; }
+        .admin-badge { position: absolute; top: 15px; right: -35px; background: #ef4444; font-size: 11px; font-weight: bold; padding: 5px 40px; transform: rotate(45deg); letter-spacing: 1.5px; }
         .header h1 { font-size: 22px; margin-bottom: 8px; line-height: 1.3; font-weight: 700; }
         .header p { font-size: 13px; opacity: 0.9; }
+        
+        /* Connection Status */
+        .db-status { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; margin-top: 10px; background: rgba(0,0,0,0.2); padding: 5px 10px; border-radius: 15px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #fbbf24; } /* Default yellow/connecting */
         
         .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
         .stat-card { background: var(--card-bg); padding: 15px 10px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border-light); }
@@ -34,7 +38,6 @@
         td:nth-child(6) { font-weight: 700; color: var(--admin-main);}
         .empty-dash { color: #cbd5e1; }
         
-        /* Interactive Buttons */
         .action-btn { border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; width: 110px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;}
         .action-btn:active { transform: translateY(2px); }
         .btn-unpaid { background-color: white; color: var(--danger); border: 1.5px solid var(--danger); }
@@ -50,12 +53,16 @@
     <div class="container">
         <div class="header">
             <div class="admin-badge">ADMIN</div>
-            <h1>⚙️ Kawalan Pembayaran Trip</h1>
-            <p>Klik pada butang status untuk mengemas kini rekod bayaran peserta.</p>
+            <h1>⚙️ Kawalan Pembayaran</h1>
+            <p>Klik butang status untuk mengemas kini rekod peserta.</p>
+            <div class="db-status">
+                <div class="status-dot" id="connection-dot"></div>
+                <span id="connection-text">Menyambung ke Pangkalan Data...</span>
+            </div>
         </div>
 
         <div class="dashboard">
-            <div class="stat-card"><h3>Jumlah Kutipan Sepatutnya</h3><div class="amount" id="total-expected">RM0</div></div>
+            <div class="stat-card"><h3>Kutipan Sepatutnya</h3><div class="amount" id="total-expected">RM0</div></div>
             <div class="stat-card"><h3>Telah Dikutip</h3><div class="amount" id="total-collected" style="color: var(--success);">RM0</div></div>
             <div class="stat-card"><h3>Baki Belum Bayar</h3><div class="amount" id="total-pending" style="color: var(--danger);">RM0</div></div>
         </div>
@@ -64,30 +71,26 @@
             <table>
                 <thead>
                     <tr>
-                        <th>👤 Nama</th>
-                        <th>🥾 Hiking</th>
-                        <th>🏠 Home</th>
-                        <th>🚙 Charter</th>
-                        <th>🍔 Mamam</th>
-                        <th>💰 Total (RM)</th>
+                        <th>👤 Nama</th><th>🥾</th><th>🏠</th><th>🚙</th><th>🍔</th><th>💰 Total</th>
                         <th>⚙️ Tindakan Admin</th>
                     </tr>
                 </thead>
                 <tbody id="table-body">
-                    <!-- Data dipapar serta merta dari Javascript -->
+                    <!-- Loading state -->
+                    <tr><td colspan="7">Memuatkan data...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <div class="notification" id="toast">✅ Status berjaya dikemas kini!</div>
+    <div class="notification" id="toast">✅ Status berjaya!</div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- 1. SETUP DATA ASAS ---
+        // --- DATA ASAS ---
         const senaraiNama = ["Boi", "Man", "Eja", "Boyo", "Liu", "Fry", "Kel", "Chiko", "Ipan"];
         const kumpulanCharter = ["Boi", "Man", "Eja", "Boyo"];
         const kosPerKepala = { hiking: 58, homestay: 34, mamam: 15, charter: 133 };
@@ -96,24 +99,15 @@
             const isCharter = kumpulanCharter.includes(nama);
             const bayaranCharter = isCharter ? kosPerKepala.charter : 0;
             const jumlah = kosPerKepala.hiking + kosPerKepala.homestay + bayaranCharter + kosPerKepala.mamam;
-            
-            return {
-                nama: nama,
-                hiking: kosPerKepala.hiking,
-                homestay: kosPerKepala.homestay,
-                charter: bayaranCharter,
-                mamam: kosPerKepala.mamam,
-                jumlah: jumlah,
-                telahBayar: false
-            };
+            return { nama, hiking: kosPerKepala.hiking, homestay: kosPerKepala.homestay, charter: bayaranCharter, mamam: kosPerKepala.mamam, jumlah, telahBayar: false };
         });
 
-        // Setup Firebase pembolehubah global
+        // Global Variables
         let db;
         let appId;
         let isAuthReady = false;
 
-        // --- 2. LOGIK PAPARAN UI ---
+        // --- RENDER UI ---
         function formatVal(nilai) { return nilai === 0 ? `<span class="empty-dash">-</span>` : nilai; }
         
         function renderData() {
@@ -130,26 +124,19 @@
 
                 html += `
                     <tr>
-                        <td>${orang.nama}</td>
-                        <td>${formatVal(orang.hiking)}</td>
-                        <td>${formatVal(orang.homestay)}</td>
-                        <td>${formatVal(orang.charter)}</td>
-                        <td>${formatVal(orang.mamam)}</td>
-                        <td>${orang.jumlah}</td>
+                        <td>${orang.nama}</td><td>${formatVal(orang.hiking)}</td>
+                        <td>${formatVal(orang.homestay)}</td><td>${formatVal(orang.charter)}</td>
+                        <td>${formatVal(orang.mamam)}</td><td>${orang.jumlah}</td>
                         <td>
-                            <button class="action-btn ${btnClass}" data-nama="${orang.nama}">
-                                ${btnText}
-                            </button>
+                            <button class="action-btn ${btnClass}" data-nama="${orang.nama}">${btnText}</button>
                         </td>
                     </tr>
                 `;
             });
             tableBody.innerHTML = html;
-
-            const baki = jumlahSasaran - jumlahDikutip;
             document.getElementById('total-expected').textContent = `RM ${jumlahSasaran}`;
             document.getElementById('total-collected').textContent = `RM ${jumlahDikutip}`;
-            document.getElementById('total-pending').textContent = `RM ${baki}`;
+            document.getElementById('total-pending').textContent = `RM ${jumlahSasaran - jumlahDikutip}`;
         }
 
         renderData();
@@ -162,81 +149,105 @@
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
-        // --- 3. INTERAKSI BUTANG ADMIN ---
+        function updateConnectionStatus(isConnected, mesej) {
+            const dot = document.getElementById('connection-dot');
+            const text = document.getElementById('connection-text');
+            text.textContent = mesej;
+            if (isConnected) {
+                dot.style.backgroundColor = '#10b981'; // Green
+            } else {
+                dot.style.backgroundColor = '#ef4444'; // Red
+            }
+        }
+
+        // --- LOGIK KLIK BUTANG ---
         document.getElementById('table-body').addEventListener('click', async (e) => {
             const btn = e.target.closest('.action-btn');
-            if (!btn || !isAuthReady) return; 
+            if (!btn) return; 
+
+            // ALARM JIKA TIADA SAMBUNGAN:
+            if (!isAuthReady) {
+                showToast("Sistem belum bersambung ke pangkalan data!", true);
+                alert("Harap maklum: Firebase belum disambungkan. Jika anda membuka fail ini di komputer anda secara manual, anda perlu memasukkan kod konfigurasi Firebase di dalam script.");
+                return; 
+            }
 
             const nama = btn.getAttribute('data-nama');
             const person = peserta.find(p => p.nama === nama);
             
             if (person) {
-                // Tukar status sementara untuk paparan pantas (Optimistic UI)
                 const statusBaru = !person.telahBayar;
-                person.telahBayar = statusBaru;
+                person.telahBayar = statusBaru; // Optimistic update
                 renderData();
 
-                // Hantar rekod ke Firebase
                 try {
                     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'payments', nama);
                     await setDoc(docRef, {
                         nama: nama,
                         telahBayar: statusBaru,
                         jumlah: person.jumlah,
-                        updatedAt: new Date().toISOString(),
-                        updatedBy: 'admin'
+                        updatedAt: new Date().toISOString()
                     }, { merge: true });
                     showToast(`Status ${nama} dikemas kini.`);
                 } catch (error) {
                     console.error("Ralat Firebase:", error);
-                    // Patah balik kepada asal jika gagal
-                    person.telahBayar = !statusBaru;
+                    person.telahBayar = !statusBaru; // Revert if fail
                     renderData();
-                    showToast("Ralat kemas kini! Sila cuba lagi.", true);
+                    showToast("Gagal dikemas kini! Tiada kebenaran/sambungan.", true);
                 }
             }
         });
 
-        // --- 4. FIREBASE INITIALIZATION ---
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        db = getFirestore(app);
-        appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
+        // --- FIREBASE INITIALIZATION ---
+        try {
+            // Semak adakah fail dijalankan dalam persekitaran yang betul
+            if (typeof __firebase_config === 'undefined') {
+                throw new Error("Missing Firebase Config");
             }
-        };
-        initAuth();
 
-        onAuthStateChanged(auth, (user) => {
-            if (!user) return;
-            isAuthReady = true;
-            
-            const paymentsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'payments');
-            
-            // Dengar perubahan secara Live
-            onSnapshot(paymentsColRef, (snapshot) => {
-                if (snapshot.empty) return; 
+            const firebaseConfig = JSON.parse(__firebase_config);
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            db = getFirestore(app);
+            appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-                snapshot.forEach(doc => {
-                    const dbData = doc.data();
-                    const person = peserta.find(p => p.nama === dbData.nama);
-                    if (person) {
-                        person.telahBayar = dbData.telahBayar;
+            const initAuth = async () => {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            };
+            initAuth();
+
+            onAuthStateChanged(auth, (user) => {
+                if (!user) {
+                    updateConnectionStatus(false, "Gagal log masuk sistem.");
+                    return;
+                }
+                
+                isAuthReady = true;
+                updateConnectionStatus(true, "Berhubung secara Live 🟢");
+                
+                const paymentsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'payments');
+                onSnapshot(paymentsColRef, (snapshot) => {
+                    if (!snapshot.empty) {
+                        snapshot.forEach(doc => {
+                            const dbData = doc.data();
+                            const person = peserta.find(p => p.nama === dbData.nama);
+                            if (person) person.telahBayar = dbData.telahBayar;
+                        });
+                        renderData();
                     }
+                }, (error) => {
+                    updateConnectionStatus(false, "Terputus dari server!");
                 });
-
-                renderData();
-            }, (error) => {
-                console.error("Gagal membaca pangkalan data:", error);
-                showToast("Gagal menyambung ke server.", true);
             });
-        });
+
+        } catch (error) {
+            console.error(error);
+            updateConnectionStatus(false, "Sistem Dijalankan Tanpa Firebase (Mode Offline)");
+        }
     </script>
 </body>
 </html>

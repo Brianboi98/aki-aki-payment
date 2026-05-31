@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Admin Aki-Aki</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4f46e5; --danger: #ef4444; --success: #10b981;
+            --bg-color: #f8fafc; --card-bg: #ffffff; --text-main: #0f172a;
+            --border-light: #e2e8f0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+
+        /* Admin Header & Table */
+        .admin-header { background: #1e293b; color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center; }
+        .table-wrapper { background: white; border-radius: 12px; overflow-x: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; text-align: center; }
+        th, td { padding: 12px 10px; border-bottom: 1px solid var(--border-light); }
+        th { background: #f1f5f9; }
+        td:first-child { font-weight: bold; text-align: left; }
+
+        .status-btn { width: 35px; height: 35px; border-radius: 50%; border: none; font-size: 16px; cursor: pointer; color: white; font-weight: bold; transition: 0.2s; }
+        .status-unpaid { background-color: var(--danger); }
+        .status-paid { background-color: var(--success); }
+        .status-btn:hover { transform: scale(1.1); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .info { text-align: center; margin-top: 15px; font-size: 13px; color: #64748b; }
+    </style>
+</head>
+<body>
+
+    <!-- Dashboard Admin -->
+    <div class="container" id="admin-dashboard">
+        <div class="admin-header">
+            <h2>⚙️ Panel Kawalan Admin</h2>
+            <p style="font-size: 13px; color: #cbd5e1;">Perubahan di sini akan terus dipaparkan (Live) kepada kawan-kawan.</p>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr><th>Nama</th><th>Jumlah (RM)</th><th>Tindakan (Klik)</th></tr>
+                </thead>
+                <tbody id="table-body">
+                    <tr><td colspan="3">Memuatkan data pangkalan awan...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="info">Anda log masuk sebagai Admin ✅</p>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const senaraiNama = ["Boi", "Man", "Eja", "Boyo", "Liu", "Fry", "Kel", "Chiko", "Ipan"];
+        const kumpulanCharter = ["Boi", "Man", "Eja", "Boyo"];
+        const kosPerKepala = { hiking: 58, homestay: 34, mamam: 15, charter: 133 };
+
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'akiaki-trip';
+
+        let adminAuthenticated = false;
+        let unsubscribeSnapshot = null; // track listener to avoid duplicates
+
+        // ── Login: use button click + Enter key ──────────────────────────
+        function verifyPin() {
+            const pin = document.getElementById('pin-input').value;
+            if (pin === 'akiaki') {
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('admin-dashboard').style.display = 'block';
+                adminAuthenticated = true;
+                initFirebase();
+            } else {
+                const errEl = document.getElementById('error-msg');
+                errEl.style.display = 'block';
+                document.getElementById('pin-input').value = '';
+                document.getElementById('pin-input').focus();
+            }
+        }
+
+        document.getElementById('login-btn').addEventListener('click', verifyPin);
+        document.getElementById('pin-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') verifyPin();
+        });
+
+        // ── Firebase init ─────────────────────────────────────────────────
+        async function initFirebase() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.error("Auth error:", err);
+                document.getElementById('table-body').innerHTML =
+                    `<tr><td colspan="3" style="color:red;">Ralat auth: ${err.message}</td></tr>`;
+                return;
+            }
+
+            onAuthStateChanged(auth, (user) => {
+                if (!user) return;
+
+                // Unsubscribe existing listener before creating a new one
+                if (unsubscribeSnapshot) unsubscribeSnapshot();
+
+                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'payments');
+
+                unsubscribeSnapshot = onSnapshot(colRef, async (snapshot) => {
+                    if (snapshot.empty) {
+                        // Seed initial data only once
+                        const batch = [];
+                        for (let i = 0; i < senaraiNama.length; i++) {
+                            const nama = senaraiNama[i];
+                            const bayaranCharter = kumpulanCharter.includes(nama) ? kosPerKepala.charter : 0;
+                            const jumlah = kosPerKepala.hiking + kosPerKepala.homestay + bayaranCharter + kosPerKepala.mamam;
+
+                            batch.push(setDoc(doc(colRef, nama), {
+                                id: nama, index: i, nama: nama,
+                                hiking: kosPerKepala.hiking,
+                                homestay: kosPerKepala.homestay,
+                                charter: bayaranCharter,
+                                mamam: kosPerKepala.mamam,
+                                jumlah: jumlah,
+                                telahBayar: false
+                            }));
+                        }
+                        await Promise.all(batch);
+                        return;
+                    }
+
+                    let pesertaList = [];
+                    snapshot.forEach(d => pesertaList.push(d.data()));
+                    pesertaList.sort((a, b) => a.index - b.index);
+
+                    let html = '';
+                    pesertaList.forEach(orang => {
+                        const btnClass = orang.telahBayar ? 'status-paid' : 'status-unpaid';
+                        const icon = orang.telahBayar ? '✓' : '✗';
+
+                        html += `
+                            <tr>
+                                <td>${orang.nama}</td>
+                                <td>RM ${orang.jumlah}</td>
+                                <td>
+                                    <button
+                                        class="status-btn ${btnClass}"
+                                        data-id="${orang.id}"
+                                        data-status="${orang.telahBayar}">
+                                        ${icon}
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    document.getElementById('table-body').innerHTML = html;
+
+                    // ── Attach click listeners after rendering ──────────────
+                    document.querySelectorAll('.status-btn').forEach(btn => {
+                        btn.addEventListener('click', async () => {
+                            if (!adminAuthenticated) return;
+                            const id = btn.dataset.id;
+                            const currentStatus = btn.dataset.status === 'true';
+                            try {
+                                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'payments', id);
+                                await updateDoc(docRef, { telahBayar: !currentStatus });
+                            } catch (err) {
+                                console.error("Update error:", err);
+                                alert(`Gagal kemaskini: ${err.message}`);
+                            }
+                        });
+                    });
+
+                }, (err) => {
+                    console.error("Snapshot error:", err);
+                    document.getElementById('table-body').innerHTML =
+                        `<tr><td colspan="3" style="color:red;">Ralat Firestore: ${err.message}</td></tr>`;
+                });
+            });
+        }
+    </script>
+</body>
+</html>

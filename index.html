@@ -63,7 +63,7 @@
                     <tr><th>👤</th><th>🥾</th><th>🏠</th><th>🚙</th><th>🍔</th><th>💰</th><th>✅</th></tr>
                 </thead>
                 <tbody id="table-body">
-                    <!-- Data dipapar serta merta dari Javascript -->
+                    <tr><td colspan="7">Memuatkan data dari pangkalan data...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -78,32 +78,35 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 1. DATA ASAS (Render serta-merta tanpa tunggu database)
+        // FIREBASE CONFIG ANDA
+        const firebaseConfig = {
+            apiKey: "AIzaSyAdoSX32HqT2Aakdgyg7VS_Cs7N8ez6_bw",
+            authDomain: "aki-aki-trail.firebaseapp.com",
+            projectId: "aki-aki-trail",
+            storageBucket: "aki-aki-trail.firebasestorage.app",
+            messagingSenderId: "686708947350",
+            appId: "1:686708947350:web:02ef0f8851f8b1908485b7",
+            measurementId: "G-87W8L41N73"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
         const senaraiNama = ["Boi", "Man", "Eja", "Boyo", "Liu", "Fry", "Kel", "Chiko", "Ipan"];
         const kumpulanCharter = ["Boi", "Man", "Eja", "Boyo"];
         const kosPerKepala = { hiking: 58, homestay: 34, mamam: 15, charter: 133 };
 
-        // Bina tatasusunan (array) peserta
         let peserta = senaraiNama.map(nama => {
             const isCharter = kumpulanCharter.includes(nama);
             const bayaranCharter = isCharter ? kosPerKepala.charter : 0;
             const jumlah = kosPerKepala.hiking + kosPerKepala.homestay + bayaranCharter + kosPerKepala.mamam;
-            
-            return {
-                nama: nama,
-                hiking: kosPerKepala.hiking,
-                homestay: kosPerKepala.homestay,
-                charter: bayaranCharter,
-                mamam: kosPerKepala.mamam,
-                jumlah: jumlah,
-                telahBayar: false // Default belum bayar
-            };
+            return { nama, hiking: kosPerKepala.hiking, homestay: kosPerKepala.homestay, charter: bayaranCharter, mamam: kosPerKepala.mamam, jumlah, telahBayar: false };
         });
 
-        // Fungsi Render UI
         function formatVal(nilai) { return nilai === 0 ? `<span class="empty-dash">-</span>` : nilai; }
         const tableBody = document.getElementById('table-body');
 
@@ -129,7 +132,6 @@
             });
             tableBody.innerHTML = html;
 
-            // Kemas kini Dashboard
             const baki = jumlahSasaran - jumlahDikutip;
             const peratusan = jumlahSasaran > 0 ? Math.round((jumlahDikutip / jumlahSasaran) * 100) : 0;
             
@@ -147,33 +149,19 @@
             }
         }
 
-        // Render UI kali pertama (Serta-merta)
         renderData();
 
-        // 2. SAMBUNGAN FIREBASE (Hanya untuk tukar status)
-        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'akiaki-trip';
-
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
-        };
-        initAuth();
+        signInAnonymously(auth).catch((error) => {
+            console.error("Gagal login:", error);
+        });
 
         onAuthStateChanged(auth, (user) => {
             if (!user) return;
-            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'payments');
+            const colRef = collection(db, 'payments');
             
             onSnapshot(colRef, (snapshot) => {
-                if (snapshot.empty) return; // Abaikan jika database masih kosong
+                if (snapshot.empty) return; 
 
-                // Jika ada data di database, kemas kini status peserta
                 snapshot.forEach(doc => {
                     const dbData = doc.data();
                     const person = peserta.find(p => p.nama === dbData.nama);
@@ -181,13 +169,12 @@
                         person.telahBayar = dbData.telahBayar;
                     }
                 });
-
-                // Render UI kali kedua dengan status terkini
                 renderData();
+            }, (error) => {
+                console.error("Ralat pangkalan data:", error);
             });
         });
     </script>
 </body>
 </html>
-
 

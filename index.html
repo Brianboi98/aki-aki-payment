@@ -69,9 +69,9 @@
         </div>
 
         <div class="legend">
-            <strong>Petunjuk Kos:</strong><br>
-            🥾 Hiking: RM 58/pax | 🏠 Homestay: RM 34/pax<br>
-            🚙 Charter: RM 133/pax (4 org) | 🍔 Mamam: RM 15/pax<br>
+            <strong>Petunjuk Kos Asas:</strong><br>
+            🥾 Hiking: RM 58 | 🏠 Homestay: RM 34<br>
+            🚙 Charter: RM 133 | 🍔 Mamam: RM 15<br>
             <em style="color: var(--primary); display:block; margin-top:5px;">Jadual ini dikemas kini secara Live.</em>
         </div>
     </div>
@@ -81,51 +81,52 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // FIREBASE CONFIG ANDA
+        // ==========================================
+        // ⚠️ TAMPAL FIREBASE CONFIG ANDA DI SINI
+        // ==========================================
         const firebaseConfig = {
             apiKey: "AIzaSyAdoSX32HqT2Aakdgyg7VS_Cs7N8ez6_bw",
             authDomain: "aki-aki-trail.firebaseapp.com",
             projectId: "aki-aki-trail",
             storageBucket: "aki-aki-trail.firebasestorage.app",
             messagingSenderId: "686708947350",
-            appId: "1:686708947350:web:02ef0f8851f8b1908485b7",
-            measurementId: "G-87W8L41N73"
+            appId: "1:686708947350:web:02ef0f8851f8b1908485b7"
         };
+        // ==========================================
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        const senaraiNama = ["Boi", "Man", "Eja", "Boyo", "Liu", "Fry", "Kel", "Chiko", "Ipan"];
-        const kumpulanCharter = ["Boi", "Man", "Eja", "Boyo"];
-        const kosPerKepala = { hiking: 58, homestay: 34, mamam: 15, charter: 133 };
+        let peserta = [];
 
-        let peserta = senaraiNama.map(nama => {
-            const isCharter = kumpulanCharter.includes(nama);
-            const bayaranCharter = isCharter ? kosPerKepala.charter : 0;
-            const jumlah = kosPerKepala.hiking + kosPerKepala.homestay + bayaranCharter + kosPerKepala.mamam;
-            return { nama, hiking: kosPerKepala.hiking, homestay: kosPerKepala.homestay, charter: bayaranCharter, mamam: kosPerKepala.mamam, jumlah, telahBayar: false };
-        });
-
-        function formatVal(nilai) { return nilai === 0 ? `<span class="empty-dash">-</span>` : nilai; }
+        function formatVal(nilai) { return (!nilai || nilai === 0) ? `<span class="empty-dash">-</span>` : nilai; }
         const tableBody = document.getElementById('table-body');
 
         function renderData() {
             let html = '';
             let jumlahSasaran = 0, jumlahDikutip = 0;
 
+            if (peserta.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7">Tiada rekod. Admin perlu tambah data.</td></tr>`;
+                return;
+            }
+
             peserta.forEach(orang => {
                 const statusClass = orang.telahBayar ? 'status-paid' : 'status-unpaid';
                 const icon = orang.telahBayar ? '✓' : '✗';
                 
-                jumlahSasaran += orang.jumlah;
-                if(orang.telahBayar) jumlahDikutip += orang.jumlah;
+                jumlahSasaran += orang.jumlah || 0;
+                if(orang.telahBayar) jumlahDikutip += orang.jumlah || 0;
 
                 html += `
                     <tr>
-                        <td>${orang.nama}</td><td>${formatVal(orang.hiking)}</td>
-                        <td>${formatVal(orang.homestay)}</td><td>${formatVal(orang.charter)}</td>
-                        <td>${formatVal(orang.mamam)}</td><td>${orang.jumlah}</td>
+                        <td>${orang.nama}</td>
+                        <td>${formatVal(orang.hiking)}</td>
+                        <td>${formatVal(orang.homestay)}</td>
+                        <td>${formatVal(orang.charter)}</td>
+                        <td>${formatVal(orang.mamam)}</td>
+                        <td>${orang.jumlah || 0}</td>
                         <td><div class="status-badge ${statusClass}">${icon}</div></td>
                     </tr>
                 `;
@@ -142,39 +143,31 @@
             const pBar = document.getElementById('progress-bar');
             const pText = document.getElementById('progress-text');
             pBar.style.width = `${peratusan}%`;
-            if(peratusan === 100) {
+            if(peratusan === 100 && jumlahSasaran > 0) {
                 pBar.style.background = '#fbbf24'; pText.innerHTML = `🎉 Trip Terjamin! 100% Selesai 🎉`;
             } else {
                 pBar.style.background = '#ffffff'; pText.textContent = `${peratusan}% Selesai`;
             }
         }
 
-        renderData();
-
-        signInAnonymously(auth).catch((error) => {
-            console.error("Gagal login:", error);
-        });
+        signInAnonymously(auth).catch(console.error);
 
         onAuthStateChanged(auth, (user) => {
             if (!user) return;
             const colRef = collection(db, 'payments');
             
             onSnapshot(colRef, (snapshot) => {
-                if (snapshot.empty) return; 
-
+                peserta = [];
                 snapshot.forEach(doc => {
-                    const dbData = doc.data();
-                    const person = peserta.find(p => p.nama === dbData.nama);
-                    if (person) {
-                        person.telahBayar = dbData.telahBayar;
-                    }
+                    peserta.push({ id: doc.id, ...doc.data() });
                 });
+                // Susun ikut abjad
+                peserta.sort((a, b) => a.nama.localeCompare(b.nama));
                 renderData();
-            }, (error) => {
-                console.error("Ralat pangkalan data:", error);
             });
         });
     </script>
 </body>
 </html>
+
 

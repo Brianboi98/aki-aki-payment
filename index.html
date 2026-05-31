@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aki-Aki Trip (Live)</title>
+    <title>Aki-Aki Trip</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -17,16 +17,16 @@
         .header { background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 12px; padding: 20px 15px; color: white; text-align: center; margin-bottom: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
         .header h1 { font-size: 20px; margin-bottom: 5px; line-height: 1.3; }
         .header p { font-size: 12px; opacity: 0.9; }
-        .live-badge { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; font-size: 10px; margin-top: 10px;}
-        .live-dot { width: 8px; height: 8px; background: #fbbf24; border-radius: 50%; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7); } 70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(251, 191, 36, 0); } 100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); } }
+        
         .progress-container { background: rgba(255, 255, 255, 0.3); border-radius: 10px; height: 10px; width: 100%; margin: 15px auto 5px auto; }
         .progress-bar { background: #ffffff; height: 100%; border-radius: 10px; width: 0%; transition: width 0.8s ease; }
         .progress-text { font-size: 12px; font-weight: 500; }
+        
         .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
         .stat-card { background: var(--card-bg); padding: 12px 5px; border-radius: 12px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border: 1px solid var(--border-light); }
         .stat-card h3 { font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
         .stat-card .amount { font-size: 15px; font-weight: 700; }
+        
         .table-wrapper { background: var(--card-bg); border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); padding: 10px 5px; border: 1px solid var(--border-light); margin-bottom: 10px; overflow-x: auto; }
         table { width: 100%; min-width: 300px; border-collapse: collapse; text-align: center; }
         th, td { padding: 8px 4px; border-bottom: 1px solid var(--border-light); font-size: 12px; }
@@ -34,11 +34,12 @@
         th:nth-child(1), td:nth-child(1) { text-align: left; padding-left: 8px; font-weight: 600;}
         th:nth-child(6), td:nth-child(6) { font-weight: 700; color: var(--primary);}
         .empty-dash { color: #cbd5e1; }
-        .status-badge { display: inline-flex; width: 24px; height: 24px; border-radius: 50%; align-items: center; justify-content: center; color: white; font-size: 12px; }
+        
+        .status-badge { display: inline-flex; width: 24px; height: 24px; border-radius: 50%; align-items: center; justify-content: center; color: white; font-size: 12px; transition: 0.3s; }
         .status-unpaid { background-color: var(--danger); }
         .status-paid { background-color: var(--success); }
+        
         .legend { background: var(--card-bg); padding: 12px; border-radius: 8px; font-size: 11px; color: var(--text-muted); text-align: center; line-height: 1.6; border: 1px solid var(--border-light); margin-bottom: 20px; }
-        .loading { text-align: center; padding: 20px; font-size: 14px; color: var(--text-muted); }
     </style>
 </head>
 <body>
@@ -46,9 +47,8 @@
         <div class="header">
             <h1>🏕️ Aki-Aki Trail Trip & Healing</h1>
             <p>Jom selesaikan bayaran untuk kelancaran trip!</p>
-            <div class="live-badge"><div class="live-dot"></div> Live Update</div>
             <div class="progress-container"><div class="progress-bar" id="progress-bar"></div></div>
-            <div class="progress-text" id="progress-text">Memuatkan data...</div>
+            <div class="progress-text" id="progress-text">0% Selesai</div>
         </div>
 
         <div class="dashboard">
@@ -63,7 +63,7 @@
                     <tr><th>👤</th><th>🥾</th><th>🏠</th><th>🚙</th><th>🍔</th><th>💰</th><th>✅</th></tr>
                 </thead>
                 <tbody id="table-body">
-                    <tr><td colspan="7" class="loading">Menyambung ke pangkalan data...</td></tr>
+                    <!-- Data dipapar serta merta dari Javascript -->
                 </tbody>
             </table>
         </div>
@@ -72,28 +72,91 @@
             <strong>Petunjuk Kos:</strong><br>
             🥾 Hiking: RM 58/pax | 🏠 Homestay: RM 34/pax<br>
             🚙 Charter: RM 133/pax (4 org) | 🍔 Mamam: RM 15/pax<br>
-            <em style="color: var(--primary); display:block; margin-top:5px;">Jadual ini dikemas kini secara automatik.</em>
+            <em style="color: var(--primary); display:block; margin-top:5px;">Jadual ini dikemas kini secara Live.</em>
         </div>
     </div>
 
-    <!-- Firebase SDK (Module) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Konfigurasi Asas Data
+        // 1. DATA ASAS (Render serta-merta tanpa tunggu database)
         const senaraiNama = ["Boi", "Man", "Eja", "Boyo", "Liu", "Fry", "Kel", "Chiko", "Ipan"];
         const kumpulanCharter = ["Boi", "Man", "Eja", "Boyo"];
         const kosPerKepala = { hiking: 58, homestay: 34, mamam: 15, charter: 133 };
 
+        // Bina tatasusunan (array) peserta
+        let peserta = senaraiNama.map(nama => {
+            const isCharter = kumpulanCharter.includes(nama);
+            const bayaranCharter = isCharter ? kosPerKepala.charter : 0;
+            const jumlah = kosPerKepala.hiking + kosPerKepala.homestay + bayaranCharter + kosPerKepala.mamam;
+            
+            return {
+                nama: nama,
+                hiking: kosPerKepala.hiking,
+                homestay: kosPerKepala.homestay,
+                charter: bayaranCharter,
+                mamam: kosPerKepala.mamam,
+                jumlah: jumlah,
+                telahBayar: false // Default belum bayar
+            };
+        });
+
+        // Fungsi Render UI
+        function formatVal(nilai) { return nilai === 0 ? `<span class="empty-dash">-</span>` : nilai; }
+        const tableBody = document.getElementById('table-body');
+
+        function renderData() {
+            let html = '';
+            let jumlahSasaran = 0, jumlahDikutip = 0;
+
+            peserta.forEach(orang => {
+                const statusClass = orang.telahBayar ? 'status-paid' : 'status-unpaid';
+                const icon = orang.telahBayar ? '✓' : '✗';
+                
+                jumlahSasaran += orang.jumlah;
+                if(orang.telahBayar) jumlahDikutip += orang.jumlah;
+
+                html += `
+                    <tr>
+                        <td>${orang.nama}</td><td>${formatVal(orang.hiking)}</td>
+                        <td>${formatVal(orang.homestay)}</td><td>${formatVal(orang.charter)}</td>
+                        <td>${formatVal(orang.mamam)}</td><td>${orang.jumlah}</td>
+                        <td><div class="status-badge ${statusClass}">${icon}</div></td>
+                    </tr>
+                `;
+            });
+            tableBody.innerHTML = html;
+
+            // Kemas kini Dashboard
+            const baki = jumlahSasaran - jumlahDikutip;
+            const peratusan = jumlahSasaran > 0 ? Math.round((jumlahDikutip / jumlahSasaran) * 100) : 0;
+            
+            document.getElementById('total-expected').textContent = `RM ${jumlahSasaran}`;
+            document.getElementById('total-collected').textContent = `RM ${jumlahDikutip}`;
+            document.getElementById('total-pending').textContent = `RM ${baki}`;
+            
+            const pBar = document.getElementById('progress-bar');
+            const pText = document.getElementById('progress-text');
+            pBar.style.width = `${peratusan}%`;
+            if(peratusan === 100) {
+                pBar.style.background = '#fbbf24'; pText.innerHTML = `🎉 Trip Terjamin! 100% Selesai 🎉`;
+            } else {
+                pBar.style.background = '#ffffff'; pText.textContent = `${peratusan}% Selesai`;
+            }
+        }
+
+        // Render UI kali pertama (Serta-merta)
+        renderData();
+
+        // 2. SAMBUNGAN FIREBASE (Hanya untuk tukar status)
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'akiaki-trip';
 
-        // 1. Authenticate Reader
         const initAuth = async () => {
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                 await signInWithCustomToken(auth, __initial_auth_token);
@@ -103,90 +166,28 @@
         };
         initAuth();
 
-        const tableBody = document.getElementById('table-body');
-        function formatVal(nilai) { return nilai === 0 ? `<span class="empty-dash">-</span>` : nilai; }
-
-        // 2. Fetch Data Live
         onAuthStateChanged(auth, (user) => {
             if (!user) return;
-            
             const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'payments');
             
-            onSnapshot(colRef, async (snapshot) => {
-                
-                // JIKA DATA KOSONG, BINA DATA (Ini akan pastikan senarai nama sentiasa ada)
-                if(snapshot.empty) {
-                    console.log("Membina pangkalan data kali pertama...");
-                    for (let i = 0; i < senaraiNama.length; i++) {
-                        const nama = senaraiNama[i];
-                        const isCharter = kumpulanCharter.includes(nama);
-                        const bayaranCharter = isCharter ? kosPerKepala.charter : 0;
-                        const jumlah = kosPerKepala.hiking + kosPerKepala.homestay + bayaranCharter + kosPerKepala.mamam;
-                        
-                        await setDoc(doc(colRef, nama), {
-                            id: nama,
-                            index: i,
-                            nama: nama,
-                            hiking: kosPerKepala.hiking,
-                            homestay: kosPerKepala.homestay,
-                            charter: bayaranCharter,
-                            mamam: kosPerKepala.mamam,
-                            jumlah: jumlah,
-                            telahBayar: false
-                        });
+            onSnapshot(colRef, (snapshot) => {
+                if (snapshot.empty) return; // Abaikan jika database masih kosong
+
+                // Jika ada data di database, kemas kini status peserta
+                snapshot.forEach(doc => {
+                    const dbData = doc.data();
+                    const person = peserta.find(p => p.nama === dbData.nama);
+                    if (person) {
+                        person.telahBayar = dbData.telahBayar;
                     }
-                    return; // onSnapshot akan berjalan semula secara automatik selepas siap dibina
-                }
-
-                // PAPARKAN DATA
-                let pesertaList = [];
-                snapshot.forEach(doc => pesertaList.push(doc.data()));
-                
-                // Susun ikut urutan asal
-                pesertaList.sort((a, b) => a.index - b.index);
-
-                let html = '';
-                let jumlahSasaran = 0, jumlahDikutip = 0;
-
-                pesertaList.forEach(orang => {
-                    const statusClass = orang.telahBayar ? 'status-paid' : 'status-unpaid';
-                    const icon = orang.telahBayar ? '✓' : '✗';
-                    jumlahSasaran += orang.jumlah;
-                    if(orang.telahBayar) jumlahDikutip += orang.jumlah;
-
-                    html += `
-                        <tr>
-                            <td>${orang.nama}</td><td>${formatVal(orang.hiking)}</td>
-                            <td>${formatVal(orang.homestay)}</td><td>${formatVal(orang.charter)}</td>
-                            <td>${formatVal(orang.mamam)}</td><td>${orang.jumlah}</td>
-                            <td><div class="status-badge ${statusClass}">${icon}</div></td>
-                        </tr>
-                    `;
                 });
 
-                tableBody.innerHTML = html;
-
-                // Kemas kini Dashboard
-                const baki = jumlahSasaran - jumlahDikutip;
-                const peratusan = jumlahSasaran > 0 ? Math.round((jumlahDikutip / jumlahSasaran) * 100) : 0;
-                
-                document.getElementById('total-expected').textContent = `RM ${jumlahSasaran}`;
-                document.getElementById('total-collected').textContent = `RM ${jumlahDikutip}`;
-                document.getElementById('total-pending').textContent = `RM ${baki}`;
-                
-                const pBar = document.getElementById('progress-bar');
-                const pText = document.getElementById('progress-text');
-                pBar.style.width = `${peratusan}%`;
-                if(peratusan === 100) {
-                    pBar.style.background = '#fbbf24'; pText.innerHTML = `🎉 Trip Terjamin! 100% Selesai 🎉`;
-                } else {
-                    pBar.style.background = '#ffffff'; pText.textContent = `${peratusan}% Selesai`;
-                }
-            }, (error) => {
-                console.error("Gagal menyambung:", error);
+                // Render UI kali kedua dengan status terkini
+                renderData();
             });
         });
     </script>
 </body>
 </html>
+
 

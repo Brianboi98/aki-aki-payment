@@ -3,189 +3,241 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Admin Aki-Aki</title>
+    <title>Admin Panel - Aki-Aki Trip</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #4f46e5; --danger: #ef4444; --success: #10b981;
-            --bg-color: #f8fafc; --card-bg: #ffffff; --text-main: #0f172a;
+            --primary: #059669; --secondary: #10b981; --success: #10b981; --danger: #ef4444; 
+            --admin-main: #4f46e5; --admin-light: #e0e7ff; --admin-dark: #3730a3;
+            --bg-color: #f8fafc; --card-bg: #ffffff; --text-main: #0f172a; --text-muted: #64748b;
             --border-light: #e2e8f0;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); padding: 20px; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding: 15px 10px; }
         .container { max-width: 800px; margin: 0 auto; }
-
-        /* Admin Header & Table */
-        .admin-header { background: #1e293b; color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center; }
-        .table-wrapper { background: white; border-radius: 12px; overflow-x: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; text-align: center; }
-        th, td { padding: 12px 10px; border-bottom: 1px solid var(--border-light); }
-        th { background: #f1f5f9; }
-        td:first-child { font-weight: bold; text-align: left; }
-
-        .status-btn { width: 35px; height: 35px; border-radius: 50%; border: none; font-size: 16px; cursor: pointer; color: white; font-weight: bold; transition: 0.2s; }
-        .status-unpaid { background-color: var(--danger); }
-        .status-paid { background-color: var(--success); }
-        .status-btn:hover { transform: scale(1.1); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
-        .info { text-align: center; margin-top: 15px; font-size: 13px; color: #64748b; }
+        
+        .header { background: linear-gradient(135deg, var(--admin-main), var(--admin-dark)); border-radius: 12px; padding: 25px 20px; color: white; text-align: center; margin-bottom: 20px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); position: relative; overflow: hidden; }
+        .admin-badge { position: absolute; top: 15px; right: -35px; background: #ef4444; font-size: 11px; font-weight: bold; padding: 5px 40px; transform: rotate(45deg); letter-spacing: 1.5px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
+        .header h1 { font-size: 22px; margin-bottom: 8px; line-height: 1.3; font-weight: 700; }
+        .header p { font-size: 13px; opacity: 0.9; }
+        
+        .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .stat-card { background: var(--card-bg); padding: 15px 10px; border-radius: 12px; text-align: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border-light); }
+        .stat-card h3 { font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; font-weight: 600;}
+        .stat-card .amount { font-size: 18px; font-weight: 700; }
+        
+        .table-wrapper { background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid var(--border-light); margin-bottom: 20px; overflow-x: auto; }
+        table { width: 100%; min-width: 500px; border-collapse: collapse; text-align: center; }
+        th, td { padding: 12px 8px; border-bottom: 1px solid var(--border-light); font-size: 13px; vertical-align: middle; }
+        th { font-size: 13px; background-color: var(--admin-light); color: var(--admin-dark); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;}
+        th:nth-child(1), td:nth-child(1) { text-align: left; padding-left: 15px; font-weight: 600; color: var(--text-main);}
+        td:nth-child(6) { font-weight: 700; color: var(--admin-main);}
+        .empty-dash { color: #cbd5e1; }
+        
+        /* Interactive Buttons */
+        .action-btn { border: none; padding: 8px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; width: 110px; display: inline-flex; align-items: center; justify-content: center; gap: 5px;}
+        .action-btn:active { transform: translateY(2px); }
+        .btn-unpaid { background-color: white; color: var(--danger); border: 1.5px solid var(--danger); }
+        .btn-unpaid:hover { background-color: #fef2f2; }
+        .btn-paid { background-color: var(--success); color: white; border: 1.5px solid var(--success); }
+        .btn-paid:hover { background-color: #059669; border-color: #059669;}
+        
+        .notification { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 8px; font-size: 12px; opacity: 0; transform: translateY(20px); transition: 0.3s; pointer-events: none; z-index: 1000;}
+        .notification.show { opacity: 1; transform: translateY(0); }
     </style>
 </head>
 <body>
+    <div class="container">
+        <div class="header">
+            <div class="admin-badge">ADMIN</div>
+            <h1>⚙️ Kawalan Pembayaran Trip</h1>
+            <p>Klik pada butang status untuk mengemas kini rekod bayaran peserta.</p>
+        </div>
 
-    <!-- Dashboard Admin -->
-    <div class="container" id="admin-dashboard">
-        <div class="admin-header">
-            <h2>⚙️ Panel Kawalan Admin</h2>
-            <p style="font-size: 13px; color: #cbd5e1;">Perubahan di sini akan terus dipaparkan (Live) kepada kawan-kawan.</p>
+        <div class="dashboard">
+            <div class="stat-card"><h3>Jumlah Kutipan Sepatutnya</h3><div class="amount" id="total-expected">RM0</div></div>
+            <div class="stat-card"><h3>Telah Dikutip</h3><div class="amount" id="total-collected" style="color: var(--success);">RM0</div></div>
+            <div class="stat-card"><h3>Baki Belum Bayar</h3><div class="amount" id="total-pending" style="color: var(--danger);">RM0</div></div>
         </div>
 
         <div class="table-wrapper">
             <table>
                 <thead>
-                    <tr><th>Nama</th><th>Jumlah (RM)</th><th>Tindakan (Klik)</th></tr>
+                    <tr>
+                        <th>👤 Nama</th>
+                        <th>🥾 Hiking</th>
+                        <th>🏠 Home</th>
+                        <th>🚙 Charter</th>
+                        <th>🍔 Mamam</th>
+                        <th>💰 Total (RM)</th>
+                        <th>⚙️ Tindakan Admin</th>
+                    </tr>
                 </thead>
                 <tbody id="table-body">
-                    <tr><td colspan="3">Memuatkan data pangkalan awan...</td></tr>
+                    <!-- Data dipapar serta merta dari Javascript -->
                 </tbody>
             </table>
         </div>
-        <p class="info">Anda log masuk sebagai Admin ✅</p>
     </div>
+
+    <div class="notification" id="toast">✅ Status berjaya dikemas kini!</div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
+        // --- 1. SETUP DATA ASAS ---
         const senaraiNama = ["Boi", "Man", "Eja", "Boyo", "Liu", "Fry", "Kel", "Chiko", "Ipan"];
         const kumpulanCharter = ["Boi", "Man", "Eja", "Boyo"];
         const kosPerKepala = { hiking: 58, homestay: 34, mamam: 15, charter: 133 };
 
+        let peserta = senaraiNama.map(nama => {
+            const isCharter = kumpulanCharter.includes(nama);
+            const bayaranCharter = isCharter ? kosPerKepala.charter : 0;
+            const jumlah = kosPerKepala.hiking + kosPerKepala.homestay + bayaranCharter + kosPerKepala.mamam;
+            
+            return {
+                nama: nama,
+                hiking: kosPerKepala.hiking,
+                homestay: kosPerKepala.homestay,
+                charter: bayaranCharter,
+                mamam: kosPerKepala.mamam,
+                jumlah: jumlah,
+                telahBayar: false
+            };
+        });
+
+        // Setup Firebase pembolehubah global
+        let db;
+        let appId;
+        let isAuthReady = false;
+
+        // --- 2. LOGIK PAPARAN UI ---
+        function formatVal(nilai) { return nilai === 0 ? `<span class="empty-dash">-</span>` : nilai; }
+        
+        function renderData() {
+            const tableBody = document.getElementById('table-body');
+            let html = '';
+            let jumlahSasaran = 0, jumlahDikutip = 0;
+
+            peserta.forEach(orang => {
+                const btnClass = orang.telahBayar ? 'btn-paid' : 'btn-unpaid';
+                const btnText = orang.telahBayar ? '✅ Selesai' : '❌ Belum';
+                
+                jumlahSasaran += orang.jumlah;
+                if(orang.telahBayar) jumlahDikutip += orang.jumlah;
+
+                html += `
+                    <tr>
+                        <td>${orang.nama}</td>
+                        <td>${formatVal(orang.hiking)}</td>
+                        <td>${formatVal(orang.homestay)}</td>
+                        <td>${formatVal(orang.charter)}</td>
+                        <td>${formatVal(orang.mamam)}</td>
+                        <td>${orang.jumlah}</td>
+                        <td>
+                            <button class="action-btn ${btnClass}" data-nama="${orang.nama}">
+                                ${btnText}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tableBody.innerHTML = html;
+
+            const baki = jumlahSasaran - jumlahDikutip;
+            document.getElementById('total-expected').textContent = `RM ${jumlahSasaran}`;
+            document.getElementById('total-collected').textContent = `RM ${jumlahDikutip}`;
+            document.getElementById('total-pending').textContent = `RM ${baki}`;
+        }
+
+        renderData();
+
+        function showToast(mesej, isError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = mesej;
+            toast.style.background = isError ? '#ef4444' : '#10b981';
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // --- 3. INTERAKSI BUTANG ADMIN ---
+        document.getElementById('table-body').addEventListener('click', async (e) => {
+            const btn = e.target.closest('.action-btn');
+            if (!btn || !isAuthReady) return; 
+
+            const nama = btn.getAttribute('data-nama');
+            const person = peserta.find(p => p.nama === nama);
+            
+            if (person) {
+                // Tukar status sementara untuk paparan pantas (Optimistic UI)
+                const statusBaru = !person.telahBayar;
+                person.telahBayar = statusBaru;
+                renderData();
+
+                // Hantar rekod ke Firebase
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'payments', nama);
+                    await setDoc(docRef, {
+                        nama: nama,
+                        telahBayar: statusBaru,
+                        jumlah: person.jumlah,
+                        updatedAt: new Date().toISOString(),
+                        updatedBy: 'admin'
+                    }, { merge: true });
+                    showToast(`Status ${nama} dikemas kini.`);
+                } catch (error) {
+                    console.error("Ralat Firebase:", error);
+                    // Patah balik kepada asal jika gagal
+                    person.telahBayar = !statusBaru;
+                    renderData();
+                    showToast("Ralat kemas kini! Sila cuba lagi.", true);
+                }
+            }
+        });
+
+        // --- 4. FIREBASE INITIALIZATION ---
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'akiaki-trip';
+        db = getFirestore(app);
+        appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-        let adminAuthenticated = false;
-        let unsubscribeSnapshot = null; // track listener to avoid duplicates
-
-        // ── Login: use button click + Enter key ──────────────────────────
-        function verifyPin() {
-            const pin = document.getElementById('pin-input').value;
-            if (pin === 'akiaki') {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('admin-dashboard').style.display = 'block';
-                adminAuthenticated = true;
-                initFirebase();
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
             } else {
-                const errEl = document.getElementById('error-msg');
-                errEl.style.display = 'block';
-                document.getElementById('pin-input').value = '';
-                document.getElementById('pin-input').focus();
+                await signInAnonymously(auth);
             }
-        }
+        };
+        initAuth();
 
-        document.getElementById('login-btn').addEventListener('click', verifyPin);
-        document.getElementById('pin-input').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') verifyPin();
-        });
+        onAuthStateChanged(auth, (user) => {
+            if (!user) return;
+            isAuthReady = true;
+            
+            const paymentsColRef = collection(db, 'artifacts', appId, 'public', 'data', 'payments');
+            
+            // Dengar perubahan secara Live
+            onSnapshot(paymentsColRef, (snapshot) => {
+                if (snapshot.empty) return; 
 
-        // ── Firebase init ─────────────────────────────────────────────────
-        async function initFirebase() {
-            try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-            } catch (err) {
-                console.error("Auth error:", err);
-                document.getElementById('table-body').innerHTML =
-                    `<tr><td colspan="3" style="color:red;">Ralat auth: ${err.message}</td></tr>`;
-                return;
-            }
-
-            onAuthStateChanged(auth, (user) => {
-                if (!user) return;
-
-                // Unsubscribe existing listener before creating a new one
-                if (unsubscribeSnapshot) unsubscribeSnapshot();
-
-                const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'payments');
-
-                unsubscribeSnapshot = onSnapshot(colRef, async (snapshot) => {
-                    if (snapshot.empty) {
-                        // Seed initial data only once
-                        const batch = [];
-                        for (let i = 0; i < senaraiNama.length; i++) {
-                            const nama = senaraiNama[i];
-                            const bayaranCharter = kumpulanCharter.includes(nama) ? kosPerKepala.charter : 0;
-                            const jumlah = kosPerKepala.hiking + kosPerKepala.homestay + bayaranCharter + kosPerKepala.mamam;
-
-                            batch.push(setDoc(doc(colRef, nama), {
-                                id: nama, index: i, nama: nama,
-                                hiking: kosPerKepala.hiking,
-                                homestay: kosPerKepala.homestay,
-                                charter: bayaranCharter,
-                                mamam: kosPerKepala.mamam,
-                                jumlah: jumlah,
-                                telahBayar: false
-                            }));
-                        }
-                        await Promise.all(batch);
-                        return;
+                snapshot.forEach(doc => {
+                    const dbData = doc.data();
+                    const person = peserta.find(p => p.nama === dbData.nama);
+                    if (person) {
+                        person.telahBayar = dbData.telahBayar;
                     }
-
-                    let pesertaList = [];
-                    snapshot.forEach(d => pesertaList.push(d.data()));
-                    pesertaList.sort((a, b) => a.index - b.index);
-
-                    let html = '';
-                    pesertaList.forEach(orang => {
-                        const btnClass = orang.telahBayar ? 'status-paid' : 'status-unpaid';
-                        const icon = orang.telahBayar ? '✓' : '✗';
-
-                        html += `
-                            <tr>
-                                <td>${orang.nama}</td>
-                                <td>RM ${orang.jumlah}</td>
-                                <td>
-                                    <button
-                                        class="status-btn ${btnClass}"
-                                        data-id="${orang.id}"
-                                        data-status="${orang.telahBayar}">
-                                        ${icon}
-                                    </button>
-                                </td>
-                            </tr>
-                        `;
-                    });
-                    document.getElementById('table-body').innerHTML = html;
-
-                    // ── Attach click listeners after rendering ──────────────
-                    document.querySelectorAll('.status-btn').forEach(btn => {
-                        btn.addEventListener('click', async () => {
-                            if (!adminAuthenticated) return;
-                            const id = btn.dataset.id;
-                            const currentStatus = btn.dataset.status === 'true';
-                            try {
-                                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'payments', id);
-                                await updateDoc(docRef, { telahBayar: !currentStatus });
-                            } catch (err) {
-                                console.error("Update error:", err);
-                                alert(`Gagal kemaskini: ${err.message}`);
-                            }
-                        });
-                    });
-
-                }, (err) => {
-                    console.error("Snapshot error:", err);
-                    document.getElementById('table-body').innerHTML =
-                        `<tr><td colspan="3" style="color:red;">Ralat Firestore: ${err.message}</td></tr>`;
                 });
+
+                renderData();
+            }, (error) => {
+                console.error("Gagal membaca pangkalan data:", error);
+                showToast("Gagal menyambung ke server.", true);
             });
-        }
+        });
     </script>
 </body>
 </html>
+
